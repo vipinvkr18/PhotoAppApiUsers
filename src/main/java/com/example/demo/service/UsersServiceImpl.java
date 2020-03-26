@@ -6,6 +6,8 @@ import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
 import org.modelmapper.convention.MatchingStrategies;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.security.core.userdetails.User;
@@ -20,6 +22,8 @@ import com.example.demo.data.UserEntity;
 import com.example.demo.data.UsersRepository;
 import com.example.demo.shared.UserDto;
 import com.example.demo.ui.model.AlbumResponseModel;
+
+import feign.FeignException;
 @Service
 public class UsersServiceImpl implements UsersService{
 	UsersRepository usersRepository;
@@ -27,6 +31,7 @@ public class UsersServiceImpl implements UsersService{
 	BCryptPasswordEncoder bCryptPasswordEncoder;
 	RestTemplate restTemplate;
 	AlbumsServiceClient albumsServiceClient;
+	Logger logger=LoggerFactory.getLogger(this.getClass());
 	@Autowired
 	public UsersServiceImpl(UsersRepository usersRepository, 
 			Environment environment,BCryptPasswordEncoder bCryptPasswordEncoder,RestTemplate restTemplate,
@@ -87,7 +92,13 @@ public class UsersServiceImpl implements UsersService{
         });
         List<AlbumResponseModel> albumsList = albumsListResponse.getBody(); 
 */
-        List<AlbumResponseModel> albumsList = albumsServiceClient.getAlbums(userId);
+        List<AlbumResponseModel> albumsList = null;
+		try {
+			albumsList = albumsServiceClient.getAlbums(userId);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			logger.error(e.getLocalizedMessage());
+		}
 		userDto.setAlbums(albumsList);
 
 		return userDto;
